@@ -1,10 +1,10 @@
 import React from 'react';
-import { User } from 'firebase/auth';
+import firebase from 'firebase/compat/app';
 import { UserProfile } from '../types';
 import { auth } from '../firebase';
 
 interface ProfileProps {
-  user: User;
+  user: firebase.User;
   profile: UserProfile;
 }
 

@@ -24,6 +24,7 @@ export interface MatchState {
       avatar: string;
       score: number;
       connected: boolean;
+      level?: number;
     }
   };
   turn: string; // uid of current turn

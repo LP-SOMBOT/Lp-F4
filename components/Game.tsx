@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { User } from 'firebase/auth';
+import firebase from 'firebase/compat/app';
 import { ref, onValue, off } from 'firebase/database';
 import { db } from '../firebase';
 import { MatchState, Question } from '../types';
@@ -8,7 +8,7 @@ import { Howl } from 'howler';
 import confetti from 'canvas-confetti';
 
 interface GameProps {
-  user: User;
+  user: firebase.User;
   mode: 'multiplayer' | 'solo';
 }
 
@@ -53,12 +53,12 @@ const Game: React.FC<GameProps> = ({ user, mode }) => {
                 window.location.hash = '#lobby';
             }
           });
-          return () => off(matchRef);
+          return () => unsubscribeMatch();
         } else {
              window.location.hash = '#lobby';
         }
       });
-      return () => off(userRef);
+      return () => unsubscribeUser();
     } else {
         // Init Solo
         setSoloQuestions(getRandomQuestions('math', 5));
@@ -101,26 +101,12 @@ const Game: React.FC<GameProps> = ({ user, mode }) => {
         setTimeout(async () => {
             if (mode === 'multiplayer' && matchState) {
                 const opponentUid = Object.keys(matchState.players).find(id => id !== user.uid);
-                const isMatchOver = matchState.currentQuestionIndex === matchState.questions.length - 1 && user.uid === Object.keys(matchState.players)[1]; // Simplified end condition logic for demo
-                
-                // Better End Condition: If index is last and current turn is Player 2
-                // We actually need a robust turn manager. For this demo:
-                // 5 Questions. Each player answers Q1, then Q2.
-                // Total turns = 10.
-                
-                // Let's use simple turns: Just switch turn. If both played index, inc index.
-                // If index > total, finish.
+                const isMatchOver = matchState.currentQuestionIndex === matchState.questions.length - 1 && user.uid === Object.keys(matchState.players)[1]; 
                 
                 const playerIds = Object.keys(matchState.players);
                 const nextTurn = opponentUid!;
                 
-                // Check if this was the final answer needed
-                let gameOver = false;
-                if (matchState.currentQuestionIndex >= matchState.questions.length - 1 && user.uid === playerIds[1]) {
-                    gameOver = true;
-                }
-
-                await submitAnswer(matchState.matchId, user.uid, isCorrect, nextTurn, gameOver);
+                await submitAnswer(matchState.matchId, user.uid, isCorrect, nextTurn, isMatchOver);
             } else {
                 // Solo Logic
                 if (isCorrect) setSoloScore(s => s + 1);
@@ -128,7 +114,6 @@ const Game: React.FC<GameProps> = ({ user, mode }) => {
                     setSoloIndex(i => i + 1);
                 } else {
                     // End Solo
-                    // Simple alert for now or modal
                 }
             }
         }, 1000);
@@ -177,19 +162,51 @@ const Game: React.FC<GameProps> = ({ user, mode }) => {
 
   return (
     <div className="h-full flex flex-col p-4 relative">
-      {/* VS Header */}
+      {/* VS Header with Detailed Player Banners */}
       {mode === 'multiplayer' && me && opp && (
-          <div className="flex justify-between items-center mb-6 bg-surface p-4 rounded-xl shadow-lg">
-              <div className={`flex flex-col items-center ${matchState?.turn === user.uid ? 'scale-110 transition-transform' : 'opacity-60'}`}>
-                   <img src={me.avatar} className={`w-12 h-12 rounded-full border-2 ${matchState?.turn === user.uid ? 'border-primary shadow-[0_0_15px_rgba(139,92,246,0.6)]' : 'border-gray-600'}`} />
-                   <span className="text-xs font-bold mt-1">{me.score}</span>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+              {/* Me Banner */}
+              <div className={`relative p-3 rounded-2xl border transition-all duration-300 flex flex-col items-center overflow-hidden ${matchState?.turn === user.uid ? 'bg-primary/10 border-primary shadow-[0_0_15px_rgba(139,92,246,0.2)]' : 'bg-surface border-white/5 opacity-70'}`}>
+                  {/* Indicator Label */}
+                  <div className="absolute top-2 left-2 z-10">
+                       <span className="text-[10px] font-bold text-gray-400">YOU</span>
+                  </div>
+                  
+                  {/* Avatar & Level */}
+                  <div className="relative mt-2 mb-2">
+                      <img src={me.avatar} className={`w-14 h-14 rounded-full object-cover border-2 transition-colors ${matchState?.turn === user.uid ? 'border-primary' : 'border-gray-500'}`} />
+                      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-surface px-2 py-0.5 rounded-md border border-white/10 shadow-sm z-20">
+                          <span className="text-[10px] font-bold whitespace-nowrap text-white">LVL {me.level || 1}</span>
+                      </div>
+                  </div>
+                  
+                  {/* Name */}
+                  <div className="text-sm font-bold mt-2 truncate max-w-full px-1 w-full text-center">{me.name}</div>
+                  
+                  {/* Score */}
+                  <div className={`text-2xl font-black mt-1 ${matchState?.turn === user.uid ? 'text-primary' : 'text-gray-400'}`}>
+                      {me.score}
+                  </div>
               </div>
-              
-              <div className="text-2xl font-black italic text-gray-600">VS</div>
 
-              <div className={`flex flex-col items-center ${matchState?.turn !== user.uid ? 'scale-110 transition-transform' : 'opacity-60'}`}>
-                   <img src={opp.avatar} className={`w-12 h-12 rounded-full border-2 ${matchState?.turn !== user.uid ? 'border-secondary shadow-[0_0_15px_rgba(16,185,129,0.6)]' : 'border-gray-600'}`} />
-                   <span className="text-xs font-bold mt-1">{opp.score}</span>
+              {/* Opponent Banner */}
+              <div className={`relative p-3 rounded-2xl border transition-all duration-300 flex flex-col items-center overflow-hidden ${matchState?.turn !== user.uid ? 'bg-secondary/10 border-secondary shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-surface border-white/5 opacity-70'}`}>
+                   <div className="absolute top-2 right-2 z-10">
+                       <span className="text-[10px] font-bold text-gray-400">OPP</span>
+                  </div>
+                  
+                  <div className="relative mt-2 mb-2">
+                      <img src={opp.avatar} className={`w-14 h-14 rounded-full object-cover border-2 transition-colors ${matchState?.turn !== user.uid ? 'border-secondary' : 'border-gray-500'}`} />
+                       <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-surface px-2 py-0.5 rounded-md border border-white/10 shadow-sm z-20">
+                          <span className="text-[10px] font-bold whitespace-nowrap text-white">LVL {opp.level || 1}</span>
+                      </div>
+                  </div>
+                  
+                  <div className="text-sm font-bold mt-2 truncate max-w-full px-1 w-full text-center">{opp.name}</div>
+                  
+                  <div className={`text-2xl font-black mt-1 ${matchState?.turn !== user.uid ? 'text-secondary' : 'text-gray-400'}`}>
+                      {opp.score}
+                  </div>
               </div>
           </div>
       )}

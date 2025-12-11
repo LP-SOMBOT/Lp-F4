@@ -1,5 +1,5 @@
 import { db } from '../firebase';
-import { ref, set, push, get, remove, update, onDisconnect, runTransaction, serverTimestamp } from 'firebase/database';
+import { ref, set, get, push, remove, update, onDisconnect, runTransaction, serverTimestamp } from 'firebase/database';
 import { DEMO_DATA, POINTS_PER_CORRECT } from '../constants';
 import { Question } from '../types';
 
@@ -60,7 +60,8 @@ const createMatch = async (uids: string[], subject: 'math' | 'general') => {
       name: userVal.name,
       avatar: userVal.avatar,
       score: 0,
-      connected: true
+      connected: true,
+      level: Math.floor((userVal.points || 0) / 100) + 1
     };
   }
 
@@ -141,11 +142,7 @@ export const submitAnswer = async (matchId: string, uid: string, isCorrect: bool
       } else {
         // Next Turn & Question
         match.turn = nextTurnUid;
-        // Only advance question index if the SECOND player just finished their turn on this question
-        // Or simplified: Advance question index every 2 turns? 
-        // Logic: Turn based. P1 answers Q1 -> P2 answers Q1 -> P1 answers Q2.
         
-        // Let's check who just played. If it was the second player in the list, increment Q index.
         const playerIds = Object.keys(match.players);
         if (uid === playerIds[1]) {
            match.currentQuestionIndex = (match.currentQuestionIndex || 0) + 1;
@@ -166,6 +163,4 @@ export const submitAnswer = async (matchId: string, uid: string, isCorrect: bool
 export const leaveMatch = async (uid: string, matchId: string) => {
     // Remove active match reference
     await set(ref(db, `users/${uid}/activeMatch`), null);
-    
-    // If last player, maybe cleanup match? Kept simple for now.
 }

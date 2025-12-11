@@ -8,8 +8,10 @@ const Leaderboard: React.FC = () => {
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
-      const q = query(ref(db, 'users'), orderByChild('points'), limitToLast(10));
+      const usersRef = ref(db, 'users');
+      const q = query(usersRef, orderByChild('points'), limitToLast(10));
       const snapshot = await get(q);
+      
       if (snapshot.exists()) {
         const data: UserProfile[] = [];
         snapshot.forEach((child) => {

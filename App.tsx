@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { auth, db } from './firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import firebase from 'firebase/compat/app';
 import { ref, onValue, off } from 'firebase/database';
 import Auth from './components/Auth';
 import Layout from './components/Layout';
@@ -11,14 +11,14 @@ import Profile from './components/Profile';
 import { UserProfile } from './types';
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [user, setUser] = useState<firebase.User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [view, setView] = useState<string>('home');
   const [loading, setLoading] = useState(true);
 
   // Auth Listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
       if (!currentUser) {
         setUserProfile(null);
@@ -32,7 +32,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (user) {
       const userRef = ref(db, `users/${user.uid}`);
-      const listener = onValue(userRef, (snapshot) => {
+      const unsubscribe = onValue(userRef, (snapshot) => {
         if (snapshot.exists()) {
           setUserProfile(snapshot.val());
           
@@ -44,7 +44,7 @@ const App: React.FC = () => {
         }
         setLoading(false);
       });
-      return () => off(userRef);
+      return () => unsubscribe();
     }
   }, [user]);
 

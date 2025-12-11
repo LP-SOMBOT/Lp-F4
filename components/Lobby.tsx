@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { User } from 'firebase/auth';
-import { ref, remove } from 'firebase/database';
+import firebase from 'firebase/compat/app';
 import { db } from '../firebase';
 import { joinQueue, createRoom, joinRoom } from '../services/gameService';
 
 interface LobbyProps {
-  user: User;
+  user: firebase.User;
 }
 
 const Lobby: React.FC<LobbyProps> = ({ user }) => {
@@ -19,8 +18,8 @@ const Lobby: React.FC<LobbyProps> = ({ user }) => {
   useEffect(() => {
     return () => {
       if (status === 'searching') {
-        const queueRef = ref(db, `queue/general`); // Assuming general for cleanup simplicity
-        // In a real app, track the specific ref pushed
+        // queue cleanup handled in service or manually here if needed
+        // but for now keeping it simple as per original logic
       }
     };
   }, [status]);

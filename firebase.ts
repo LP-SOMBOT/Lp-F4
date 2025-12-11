@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
 import { getDatabase } from 'firebase/database';
 
 const firebaseConfig = {
@@ -12,6 +12,12 @@ const firebaseConfig = {
   appId: "1:277886142393:web:44fedcbec4e9cc5363d868"
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getDatabase(app);
+// Initialize Firebase using compat API
+const app = firebase.initializeApp(firebaseConfig);
+
+// Export Auth instance (Compat/v8 style)
+export const auth = firebase.auth();
+
+// Export Database instance (Modular/v9 style)
+// We cast app to any because compat app type might not perfectly align with v9 FirebaseApp expected by getDatabase
+export const db = getDatabase(app as any);

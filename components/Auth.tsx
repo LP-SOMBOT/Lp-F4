@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { ref, set } from 'firebase/database';
 import { AVATARS } from '../constants';
 
@@ -20,22 +19,24 @@ const Auth: React.FC = () => {
 
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        await auth.signInWithEmailAndPassword(email, password);
       } else {
-        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        const userCred = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCred.user;
         
-        // Create DB Entry
-        await set(ref(db, `users/${user.uid}`), {
-          uid: user.uid,
-          name: name || 'Student',
-          email,
-          points: 0,
-          avatar: selectedAvatar,
-          activeMatch: null
-        });
+        if (user) {
+            // Create DB Entry
+            await set(ref(db, `users/${user.uid}`), {
+              uid: user.uid,
+              name: name || 'Student',
+              email,
+              points: 0,
+              avatar: selectedAvatar,
+              activeMatch: null
+            });
 
-        await updateProfile(user, { displayName: name, photoURL: selectedAvatar });
+            await user.updateProfile({ displayName: name, photoURL: selectedAvatar });
+        }
       }
     } catch (err: any) {
       setError(err.message.replace('Firebase:', ''));
