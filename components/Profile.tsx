@@ -1,5 +1,5 @@
 import React from 'react';
-import { User } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 import { UserProfile } from '../types';
 import { auth } from '../firebase';
 

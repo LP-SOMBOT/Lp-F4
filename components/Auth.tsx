@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import * as firebaseAuth from 'firebase/auth';
 import { ref, set } from 'firebase/database';
 import { AVATARS } from '../constants';
+
+const { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } = firebaseAuth;
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);

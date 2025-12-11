@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { auth, db } from './firebase';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import * as firebaseAuth from 'firebase/auth';
+import type { User as FirebaseUser } from 'firebase/auth';
 import { ref, onValue, off } from 'firebase/database';
 import Auth from './components/Auth';
 import Layout from './components/Layout';
@@ -9,6 +10,8 @@ import Game from './components/Game';
 import Leaderboard from './components/Leaderboard';
 import Profile from './components/Profile';
 import { UserProfile } from './types';
+
+const { onAuthStateChanged } = firebaseAuth;
 
 const App: React.FC = () => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
