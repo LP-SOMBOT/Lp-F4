@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { User } from 'firebase/auth';
+import { User } from 'firebase/auth';
 import { ref, remove } from 'firebase/database';
 import { db } from '../firebase';
 import { joinQueue, createRoom, joinRoom } from '../services/gameService';

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import type { User } from 'firebase/auth';
+import { User } from 'firebase/auth';
 import { ref, onValue, off } from 'firebase/database';
 import { db } from '../firebase';
 import { MatchState, Question } from '../types';

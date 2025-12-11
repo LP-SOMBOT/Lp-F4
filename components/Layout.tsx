@@ -8,6 +8,8 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, userProfile }) => {
   const currentHash = window.location.hash || '#home';
+  // Check if we are in a game mode (multiplayer or solo) to enable full screen
+  const isFullScreen = currentHash === '#game' || currentHash === '#solo';
 
   const NavItem = ({ hash, icon, label }: { hash: string; icon: string; label: string }) => {
     const isActive = currentHash === hash;
@@ -26,8 +28,8 @@ const Layout: React.FC<LayoutProps> = ({ children, userProfile }) => {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-background overflow-hidden relative">
-      {/* Header */}
-      {userProfile && (
+      {/* Header - Hidden in game modes */}
+      {userProfile && !isFullScreen && (
         <header className="h-[65px] absolute top-0 left-0 right-0 z-50 glass flex items-center justify-between px-4 shadow-lg shadow-black/20">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary">
@@ -45,13 +47,15 @@ const Layout: React.FC<LayoutProps> = ({ children, userProfile }) => {
         </header>
       )}
 
-      {/* Main Content Area - Scrollable */}
-      <main className={`absolute top-[65px] bottom-[70px] left-0 right-0 overflow-y-auto overflow-x-hidden w-full ${!userProfile ? 'top-0' : ''}`}>
+      {/* Main Content Area - Full height in game modes */}
+      <main className={`absolute left-0 right-0 overflow-y-auto overflow-x-hidden w-full ${
+        userProfile && !isFullScreen ? 'top-[65px] bottom-[70px]' : 'top-0 bottom-0'
+      }`}>
         {children}
       </main>
 
-      {/* Footer Nav */}
-      {userProfile && (
+      {/* Footer Nav - Hidden in game modes */}
+      {userProfile && !isFullScreen && (
         <footer className="h-[70px] absolute bottom-0 left-0 right-0 z-50 glass flex items-center justify-around border-t border-white/5 pb-2">
           <NavItem hash="#home" icon="fa-home" label="Home" />
           <NavItem hash="#lobby" icon="fa-gamepad" label="Lobby" />
